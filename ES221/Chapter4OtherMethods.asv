@@ -1,0 +1,78 @@
+%% Oefening 4.18
+clear all; close all; clc; format long
+
+g = @(x) sin(x) -x/2 -pi/6 + sqrt(3)/2;
+fplot(g)
+grid on
+a = -4;
+b = 4;
+tol = 10^-10;
+nmax = 100;
+x0 = -pi/2;
+res_1 = bisection(g,a,b,nmax,tol, false);
+res_2 = newton(g,x0,tol,nmax)
+res_3 = newton_adapt(g,x0,tol,nmax)
+
+function cheb(x0,fun,min)
+    syms x 
+    Df(x) = diff(fun(x),x,1);
+    DDf(x) = diff(fun(x),x,2);
+    while true
+        T1 = fun(x0)/Df(x0); %Alle termen van het verschil hier uitschrijven
+        T2 = 1/2*(fun(x0)/Df(x0))^2;
+        T3 = DDf(x0)/Df(x0);
+        c = x0 - T1 - T2*T3;
+        if logical(abs(c-x0)>= min)
+            x0 = c;
+        else
+            sprintf("Het antwoord is %0.5g",c)
+            break
+        end
+        continue
+    end
+end
+
+%Newton adaptive
+
+function [res] = newton_adapt(f,x0,tol,nmax)
+
+    if abs(f(x0))<tol % de gekozen startwaarde is al een nulpunt van de functie
+        res = x0;
+        return
+    else
+        % iteratief proces
+        res = zeros(1,nmax); % op voorhand een grootte toekennen aan res-vector
+        res(1) = x0; % eerste waarde fixeren
+        
+        %Afgeleide symbolisch voorstellen
+        syms x
+        g = matlabFunction(x-2*f(x)/diff(f(x),1)); % Converteer symbolic expression naar function handle of file
+        for i = 2:nmax
+            res(i) = g(res(i-1)); % nieuwe waarde
+           if abs(f(res(i))) < tol %stopvoorwaarde
+               iteraties = i
+               waarde = res(i)
+               break
+           end
+        end
+        format long
+        res = res(1:i); % enkel de waarden weergeven die gebruikt zijn 
+    end
+end
+
+%Steffenson
+
+function stef(x0,fun,min)
+    while true
+        Df = (fun(x0 + fun(x0)) - fun(x0))/fun(x0);
+        c = x0 - fun(x0)/Df;
+        if logical(abs(c-x0)>= min)
+            x0 = c;
+        else
+            sprintf("Het antwoord is %0.5g",c)
+            break
+        end
+        continue
+    end
+end
+
