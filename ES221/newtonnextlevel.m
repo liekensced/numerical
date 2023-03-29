@@ -15,12 +15,15 @@ F = @(X) [X(1)^2 - X(1)+X(2)^2; X(1)^2 - X(2)-X(2)^2];
 
 df = @(X) [2*X(1) - 1,       2*X(2);    2*X(1), - 2*X(2) - 1];
 
-fsurf(F([x,y]))
+%fsurf(F([x,y])) %Deprecated
+%Arguments Hard coded & (2d plot works in max 2 dimensions)
+myPlot(@(X,Y) X.^2 -X+Y .^2, @(X,Y) X.^2 -Y-Y .^2)
 
-newton(F, df, [0.8 0.4]', 1e-6, 200)
+newtonS(F, df, [0.8 0.4]', 1e-6, 200)
 
 
-function [sol] = newton(f,df,x0, tol,nmax)
+
+function [sol] = newtonS(f,df,x0, tol,nmax)
     if(norm(f(x0))<tol)
         sol = x0;
         return
@@ -39,5 +42,22 @@ function [sol] = newton(f,df,x0, tol,nmax)
             return
         end
     end
+end
 
+
+function [] = myPlot(f,g)
+    x = -1:0.1:1; y = -1:0.1:1;
+    [X, Y] = meshgrid (x, y);
+    F = f(X,Y) ;
+    G = g(X,Y) ;
+    mesh (X,Y,F), hold on
+    mesh (X,Y,G)
+    title ('Surfaces z=f(x,y) & z=g(x,y)');
+    xlabel ('x'); ylabel ('y'); zlabel ('z');
+
+    figure
+    cs= contour (X,Y,F); clabel (cs), hold on
+    cs= contour (X,Y,G); clabel (cs), hold off
+    title ('Contour lines f(x,y)=zi & g(x,y)=zi ');
+    xlabel ('x'); ylabel ('y');
 end

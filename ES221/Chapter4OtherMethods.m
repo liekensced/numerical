@@ -11,7 +11,24 @@ nmax = 100;
 x0 = -pi/2;
 res_1 = bisection(g,a,b,nmax,tol, false)
 res_2 = newton(g,x0,tol,nmax)
-res_3 = newtonadaptive(g,x0,tol,nmax)
+res_3 = newtonadaptive(g,x0,1,1,tol,nmax)
+
+%% Theorie oef 4.7
+
+f = @(x,p) (x^2-1)^p * log(x);
+
+tiledlayout(3,1)
+
+for p = [2 4 6]
+    nexttile
+    [res, mhist] = newtonadaptive(@(x) f(x,p), 0.8,0.9,0.95,1e-16,50);
+    plot(res)
+    hold on
+    plot(mhist, "--")
+    hold off
+
+end
+
 
 function cheb(x0,fun,min)
     syms x 
@@ -34,18 +51,24 @@ end
 
 %Newton adaptive
 
-function [res] = newtonadaptive(f, x1, x2, x3, tol, nmax)
+function [res, mHist] = newtonadaptive(f, x1, x2, x3, tol, nmax)
     res = [x1;x2;x3;zeros(nmax,1)];
     syms x
-    df(x) = diff(f(x));
-    for i = 1:nmax
-        if (2*res(i+1) - res(i) - res(i-2)) == 0
+    df = matlabFunction(diff(f(x)));
+    mHist = [0 0 0];
+    for i = 3:nmax
+        if (2*res(i-1) - res(i) - res(i-2)) == 0
             disp("Denomenator equals zero!")    
         end
-        m = (res(i+1)-res(i))/(2*res(i+1) - res(i) - res(i-2));
-        res(i+3) = res(i+2) - m*(f(res(i+2))/df(res(i+2)));
-        if(abs(f(res(i+3)))<tol)
-            res = res(1,i+3);
+        m = (res(i-1)-res(i-2))/(2*res(i-1) - res(i) - res(i-2));
+        mHist(length(mHist)+1) = m;
+        if df(res(i)) == 0
+            disp("Denomenator equals zero!")
+            return
+        end
+        res(i+1) = res(i) - m*(f(res(i))/df(res(i)));
+        if(abs(f(res(i+1)))<tol)
+            res = res(1:i+1);
             return
         end
     end
